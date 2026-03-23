@@ -27,22 +27,11 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 # Include directories
 include_directories(
     ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/third_party
 )
 
-# Source files
-file(GLOB_RECURSE SOURCES
-    ${PROJECT_SOURCE_DIR}/src/*.cpp
-)
-
-# Library
-add_library(har_cnn_lib STATIC ${SOURCES})
-target_include_directories(har_cnn_lib PUBLIC
-    ${PROJECT_SOURCE_DIR}/include
-)
-
-# Main executable
+# Main executable (header-only library, just build main)
 add_executable(har_cnn main.cpp)
-target_link_libraries(har_cnn PRIVATE har_cnn_lib)
 
 # Tests 
 option(BUILD_TESTS "Build tests" OFF)
