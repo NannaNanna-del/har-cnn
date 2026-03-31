@@ -1,5 +1,6 @@
 #include "har/tensor.hpp"
 #include <concepts>
+#include <memory>
 #include <vector>
 
 template <std::floating_point T = float> struct Parameter {
@@ -48,4 +49,7 @@ protected:
   Tensor<T> output_;
   bool training_{true};
 };
+
+template <std::floating_point T = float>
+using LayerPtr = std::unique_ptr<Layer<T>>;
 } // namespace har::layers
