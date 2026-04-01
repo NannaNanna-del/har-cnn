@@ -1,0 +1,80 @@
+#include "har/layers/layer.hpp"
+#include <concepts>
+
+namespace har::network {
+
+template <std::floating_point T = float> class Sequential {
+private:
+  std::vector<layers::LayerPtr<T>> layers_;
+
+public:
+  Sequential() = default;
+
+  Sequential(std::initializer_list<layers::LayerPtr<T>> layers) {
+    for (auto &&layer : layers) {
+      layers_.push_back(std::move(const_cast<layers::LayerPtr<T> &>(layer)));
+    }
+  }
+
+  void add(layers::LayerPtr<T> layer) { layers_.push_back(std::move(layer)); }
+
+  auto forward(const Tensor<T> &input) -> Tensor<T> {
+    Tensor<T> x = input;
+
+    for (auto &layer : layers_) {
+      x = layer->forward(x);
+    }
+
+    return x;
+  }
+
+  auto backward(const Tensor<T> &grad_output) -> Tensor<T> {
+    Tensor<T> grad = grad_output;
+
+    for (auto it = layers_.rbegin(); it != layers_.rend(); ++it) {
+      grad = (*it)->backward(grad);
+    }
+
+    return grad;
+  }
+
+  auto parametes() -> std::vector<Parameter<T> *> {
+    std::vector<Parameter<T> *> params;
+    for (auto &layer : layers_) {
+      auto layer_params = layer->parameters();
+      params.insert(params.end(), layer_params.begin(), layer_params.end());
+    }
+    return params;
+  }
+
+  // Zero all gradients
+  void zero_grad() {
+    for (auto &layer : layers_) {
+      layer->zero_grad();
+    }
+  }
+
+  // Set traninng mode
+  void train(bool mode = true) {
+    for (auto &layer : layers_) {
+      layer->set_traning(mode);
+    }
+  }
+
+  void eval() { train(false); }
+
+  auto layers() -> std::vector<layers::LayerPtr<T>> & { return layers_; }
+
+  auto layers() const -> const std::vector<layers::LayerPtr<T>> & {
+    return layers_;
+  }
+
+  auto num_layers() const -> size_t { return layers_.size(); }
+
+  auto operator[](size_t idx) -> layers::Layer<T> & { return *layers_[idx]; }
+  auto operator[](size_t idx) const -> const layers::Layer<T> & {
+    return *layers_[idx];
+  }
+};
+
+}; // namespace har::network
